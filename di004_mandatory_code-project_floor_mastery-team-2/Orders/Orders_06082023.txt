@@ -1,0 +1,6 @@
+OrderNumber,CustomerName,State,TaxRate,ProductType,Area,CostPerSquareFoot,LaborCostPerSquareFoot,MaterialCost,LaborCost,Tax,Total
+1,alice,texas,null,wood,2.32,null,null,11.9480,11.0200,1.02207600,23.99007600
+2,kate,texas,null,wood,3.13,null,null,16.1195,14.8675,1.37892150,32.36592150
+1,mona,texas,null,wood,41.2,null,null,212.180,195.700,18.1506600,426.0306600
+1,mona,texas,null,wood,41.2,null,null,212.180,195.700,18.1506600,426.0306600
+1,mona,texas,null,wood,41.2,null,null,212.180,195.700,18.1506600,426.0306600
