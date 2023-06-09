@@ -52,30 +52,61 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         }
     }
 
+//    private void displayOrders() {
+//        System.out.println("Enter a date (MM/dd/yyyy): ");
+//        String dateInput = scanner.nextLine();
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+//        LocalDate date = LocalDate.parse(dateInput, formatter);
+//
+//        LinkedList<Order> orders = businessLogic.getAllOrdersByDate(date);
+//
+//        if (!orders.isEmpty()) {
+//            for (Order order : orders) {
+//                System.out.println(order);
+//            }
+//        } else {
+//            System.out.println("No orders found for the specified date.");
+//        }
+//    }
+
     private void displayOrders() {
-        System.out.println("Enter a date (MM/dd/yyyy): ");
-        String dateInput = scanner.nextLine();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-        LocalDate date = LocalDate.parse(dateInput, formatter);
+        List<String> orderFiles = businessLogic.getAllOrderFiles();
 
-        LinkedList<Order> orders = businessLogic.getAllOrdersByDate(date);
+        if (orderFiles.isEmpty()) {
+            System.out.println("No orders found in the folder.");
+            return;
+        }
 
-        if (!orders.isEmpty()) {
-            for (Order order : orders) {
-                System.out.println(order);
+        for (String filename : orderFiles) {
+            LinkedList<Order> orders = businessLogic.readOrderFile(filename);
+
+            if (orders.isEmpty()) {
+                System.out.println("No orders found in the file: " + filename);
+            } else {
+                System.out.println("Orders in file: " + filename);
+                for (Order order : orders) {
+                    System.out.println(order);
+                }
             }
-        } else {
-            System.out.println("No orders found for the specified date.");
         }
     }
 
+    
+    
     private void addOrder() {
         Order order = getInputOrder();
 
-        if (businessLogic.addOrder(order)) {
-            System.out.println("Order Added!");
-        } else {
-            System.out.println("Order Not Added!");
+        System.out.println("Order Summary:");
+        System.out.println(order);
+
+        System.out.println("Add this order? (Y/N)");
+        String addChoice = scanner.nextLine();
+        if (addChoice.equalsIgnoreCase("Y")) {
+            if (businessLogic.addOrder(order)) {
+                System.out.println("Order Added!");
+            } else {
+                System.out.println("Order Not Added!");
+            }
         }
     }
 
@@ -106,6 +137,10 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         scanner.nextLine(); // Consume the newline character
 
         businessLogic.calculateOrder(order);
+        
+        BigDecimal taxRate = businessLogic.getTaxRate(state);
+        order.setTaxRate(taxRate);
+        
 
         return order;
     }

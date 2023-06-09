@@ -1,4 +1,4 @@
 2,anna,california,null,wood,23.3,null,null,119.995,110.675,0,230.670
 2,anna,california,null,wood,23.3,null,null,119.995,110.675,0,230.670
 3,zara,texas,null,carpet,52.3,null,null,117.675,109.830,10.1239725,237.6289725
-4
+41,alice,texas,null,carpet,12.2,null,null,27.450,25.620,2.3616150,55.4316150

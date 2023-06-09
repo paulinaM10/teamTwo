@@ -15,7 +15,7 @@ import com.floor.persistence.FloorDataAccessImpl;
 
 public class FloorBusinessLogicImpl implements FloorBusinessLogic {
     private LinkedList<Order> ordersList = new LinkedList<>();
-    private FloorDataAccess dataAccess;
+    private FloorDataAccessImpl dataAccess = new FloorDataAccessImpl();
 
     public FloorBusinessLogicImpl() {
         this.dataAccess = new FloorDataAccessImpl();
@@ -24,7 +24,7 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
     @Override
     public boolean addOrder(Order order) {
         // Generate order number based on the next available order #
-        int nextOrderNumber = getNextOrderNumber();
+        int nextOrderNumber = generateUniqueOrderNumber();
         order.setOrderNumber(nextOrderNumber);
 
         // Perform calculations
@@ -32,6 +32,21 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
 
         // Add order to the list
         return ordersList.add(order);
+    }
+    
+//    private int generateUniqueOrderNumber() {
+//        int maxOrderNumber = ordersList.stream().mapToInt(Order::getOrderNumber).max().orElse(0);
+//        return maxOrderNumber + 1;
+//    }
+    
+    private int generateUniqueOrderNumber() {
+        LocalDate currentDate = LocalDate.now();
+        int maxOrderNumber = ordersList.stream()
+                .filter(order -> order.getDate().equals(currentDate))
+                .mapToInt(Order::getOrderNumber)
+                .max()
+                .orElse(0);
+        return maxOrderNumber + 1;
     }
 
     @Override
@@ -83,10 +98,14 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
         }
         return false;
     }
+    @Override
+    public List<String> getAllOrderFiles() {
+        return dataAccess.getAllOrderFiles();
+    }
 
     @Override
-    public LinkedList<Order> getAllOrders() {
-        return ordersList;
+    public LinkedList<Order> readOrderFile(String filename) {
+        return dataAccess.readOrderFile(filename);
     }
 
     @Override
@@ -109,22 +128,25 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
         Product product = getProductByType(products, order.getProductType());
         if (product != null) {
             BigDecimal costPerSquareFoot = product.getCostPerSquareFoot();
+            BigDecimal labourCostPerSquareFoot = product.getLabourCostPerSquareFoot();
+            order.setCostPerSquareFoot(costPerSquareFoot);
+            order.setLabourCostPerSquareFoot(labourCostPerSquareFoot);
+            
+            
+            
             BigDecimal area = order.getArea();
             BigDecimal materialCost = costPerSquareFoot.multiply(area);
-            order.setMaterialCost(materialCost);
-        } else {
-            order.setMaterialCost(BigDecimal.ZERO); // Set to zero if product not found
-        }
-
-        // Calculate labour cost
-        if (product != null) {
-            BigDecimal labourCostPerSquareFoot = product.getLabourCostPerSquareFoot();
-            BigDecimal area = order.getArea();
             BigDecimal labourCost = labourCostPerSquareFoot.multiply(area);
+            order.setMaterialCost(materialCost);
             order.setLabourCost(labourCost);
         } else {
-            order.setLabourCost(BigDecimal.ZERO); // Set to zero if product not found
+        	 order.setCostPerSquareFoot(BigDecimal.ZERO);
+             order.setLabourCostPerSquareFoot(BigDecimal.ZERO);
+             order.setMaterialCost(BigDecimal.ZERO);
+             order.setLabourCost(BigDecimal.ZERO);
         }
+
+       
 
         // Calculate tax
         String state = order.getState();

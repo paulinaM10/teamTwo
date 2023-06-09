@@ -15,9 +15,12 @@ public interface FloorBusinessLogic {
     boolean editOrder(LocalDate orderDate, int orderNumber, Order editedOrder);
 
     boolean removeOrder(LocalDate orderDate, int orderNumber);
+//ADDED
+    List<String> getAllOrderFiles();
+    
+    LinkedList<Order> readOrderFile(String filename);
 
-    LinkedList<Order> getAllOrders();
-
+    
     Order getOrder(LocalDate orderDate, int orderNumber);
 
     void calculateOrder(Order order);
