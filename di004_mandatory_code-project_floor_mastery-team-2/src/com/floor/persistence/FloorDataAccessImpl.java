@@ -157,14 +157,12 @@ public class FloorDataAccessImpl implements FloorDataAccess {
     // This method writes a linked list of Order objects to a file, with each Order object getting its own file
    
     @Override
-    public boolean writeOrderFiles(LinkedList<Order> orders) {
-
+    public boolean writeOrderFile(String filename, List<Order> orders) {
         try {
-            for (Order order : orders) {
-                String fileName = generateOrderFileName(order.getDate());
-                FileWriter fileWriter = new FileWriter(fileName, true);
-                PrintWriter printWriter = new PrintWriter(fileWriter);
+            FileWriter fileWriter = new FileWriter(filename, false); // overwrite the file
+            PrintWriter printWriter = new PrintWriter(fileWriter);
 
+            for (Order order : orders) {
                 printWriter.println(order.getOrderNumber() + ","
                         + order.getCustomerName() + ","
                         + order.getState() + ","
@@ -177,11 +175,11 @@ public class FloorDataAccessImpl implements FloorDataAccess {
                         + order.getLabourCost() + ","
                         + order.getTax() + ","
                         + order.getTotal());
-
-                printWriter.flush();
-                printWriter.close();
-                fileWriter.close();
             }
+
+            printWriter.flush();
+            printWriter.close();
+            fileWriter.close();
 
             return true;
         } catch (IOException e) {
@@ -354,7 +352,7 @@ public class FloorDataAccessImpl implements FloorDataAccess {
         return allOrders;
     }
 
-	}
-
+}
+	
 			
 	

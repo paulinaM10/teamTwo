@@ -9,13 +9,11 @@ import com.floor.dto.Tax;
 
 public interface FloorDataAccess {
 
-    boolean writeOrderFiles(LinkedList<Order> orders);
-
+	public boolean writeOrderFile(String filename, List<Order> orders);
     boolean writeProductFiles(LinkedList<Product> products);
 
     boolean writeTaxFiles(LinkedList<Tax> taxes);
 	
-    public LinkedList<Order> readOrderFile(String fileName);
 
     LinkedList<Product> readProductFile();
 
