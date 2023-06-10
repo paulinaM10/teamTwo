@@ -12,15 +12,15 @@ import com.floor.dto.Tax;
 public interface FloorBusinessLogic {
     boolean addOrder(Order order);
 
-    public boolean editOrder(String filename, int orderNumber, Order editedOrder);
-    public boolean removeOrder(String filename, int orderNumber);
-    //ADDED
-    public int generateUniqueOrderNumber() ;
+    boolean editOrder(LocalDate orderDate, int orderNumber, Order editedOrder);
+
+    boolean removeOrder(LocalDate orderDate, int orderNumber);
+
     public List<String> getAllOrderFiles();
-    
-    public Order getOrder(String filename, int orderNumber);
+    Order getOrder(LocalDate orderDate, int orderNumber);
+
     void calculateOrder(Order order);
-    public LinkedList<Order> readOrderFile(String filename) ;
+
     LinkedList<Product> getAllProducts();
 
     LinkedList<Tax> getAllTaxes();
@@ -33,5 +33,8 @@ public interface FloorBusinessLogic {
 
 	LinkedList<Order> getAllOrdersByDate(LocalDate date);
 	
+	public LinkedList<Order> readOrderFile(List<String> filename);	
+	public int generateUniqueOrderNumber() ;
 	void saveQuantity();
+	
 }

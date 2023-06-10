@@ -1,5 +1,6 @@
 package com.floor.persistence;
 
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,21 +10,17 @@ import com.floor.dto.Tax;
 
 public interface FloorDataAccess {
 
-	public boolean writeOrderFile(String filename, List<Order> orders);
-    boolean writeProductFiles(LinkedList<Product> products);
-
-    boolean writeTaxFiles(LinkedList<Tax> taxes);
+	public boolean writeOrderFiles(LinkedList<Order> orders);
 	
-
+	public boolean writeProductFiles(LinkedList<Product> products);
+	
+	public boolean writeTaxFiles(LinkedList<Tax> taxes);
+	LinkedList<Order> readOrderFile();
     LinkedList<Product> readProductFile();
-
     LinkedList<Tax> readTaxFile();
-
+	
+    public LinkedList<Order> readOrderFiles(List<String> filenames);
+	
     
-    
-    List<String> getOrderFiles();
-    LinkedList<Order> readOrderFiles(List<String> filenames);
-
-
-
+    List<String> getAllOrderFiles();
 }

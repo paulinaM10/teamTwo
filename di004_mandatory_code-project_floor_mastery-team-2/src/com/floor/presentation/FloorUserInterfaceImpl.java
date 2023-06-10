@@ -1,5 +1,6 @@
 package com.floor.presentation;
-
+import java.util.List;
+import java.util.*;
 import com.floor.service.FloorBusinessLogic;
 import com.floor.service.FloorBusinessLogicImpl;
 import com.floor.dto.Order;
@@ -8,14 +9,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Scanner;
 
 public class FloorUserInterfaceImpl implements FloorUserInterface {
     private FloorBusinessLogic businessLogic = new FloorBusinessLogicImpl();
     private Scanner scanner = new Scanner(System.in);
-    private LinkedList<Order> ordersList = new LinkedList<>();
-
 
     @Override
     public void displayMenu() {
@@ -55,23 +53,6 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         }
     }
 
-//    private void displayOrders() {
-//        System.out.println("Enter a date (MM/dd/yyyy): ");
-//        String dateInput = scanner.nextLine();
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-//        LocalDate date = LocalDate.parse(dateInput, formatter);
-//
-//        LinkedList<Order> orders = businessLogic.getAllOrdersByDate(date);
-//
-//        if (!orders.isEmpty()) {
-//            for (Order order : orders) {
-//                System.out.println(order);
-//            }
-//        } else {
-//            System.out.println("No orders found for the specified date.");
-//        }
-//    }
-
     private void displayOrders() {
         System.out.println("Enter a date (MM/dd/yyyy): ");
         String dateInput = scanner.nextLine();
@@ -88,35 +69,15 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
 
         boolean foundOrders = false;
 
-        for (String filename : orderFiles) {
-            // Extract date from the filename
-            String fileDate = filename.substring(filename.indexOf('_') + 1, filename.indexOf('.'));
-
-            // Check if the date in the filename matches the entered date
-            if (fileDate.equals(formattedDateInput)) {
-                LinkedList<Order> orders = businessLogic.readOrderFile(filename);
-
-                if (!orders.isEmpty()) {
-                    System.out.println("Orders on " + dateInput + ":");
-                    foundOrders = true;
-                }
-                
-                for (Order order : orders) {
-                    System.out.println(order);
-                }
-            }
-        }
-
+        
         if (!foundOrders) {
             System.out.println("No orders found for the specified date.");
         }
     }
 
 
-    
-    
     private void addOrder() {
-        Order order = getInputOrder();
+    	Order order = getInputOrder();
 
         System.out.println("Order Summary:");
         System.out.println(order);
@@ -124,10 +85,8 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         System.out.println("Add this order? (Y/N)");
         String addChoice = scanner.nextLine();
         if (addChoice.equalsIgnoreCase("Y")) {
-            if (businessLogic.addOrder(order))
-            
-            {
-            	businessLogic.generateUniqueOrderNumber();
+            if (businessLogic.addOrder(order)) {
+            	
             	businessLogic.saveQuantity();
                 System.out.println("Order Added!");
             } else {
@@ -163,24 +122,23 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         scanner.nextLine(); // Consume the newline character
 
         businessLogic.calculateOrder(order);
-        
         BigDecimal taxRate = businessLogic.getTaxRate(state);
         order.setTaxRate(taxRate);
         
-
         return order;
     }
 
     private void editOrder() {
         System.out.println("Enter order date (MM/dd/yyyy): ");
         String dateInput = scanner.nextLine();
-        String formattedDateInput = dateInput.replace("/", "");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        LocalDate orderDate = LocalDate.parse(dateInput, formatter);
 
         System.out.println("Enter order number: ");
         int orderNumber = scanner.nextInt();
         scanner.nextLine();
 
-        Order existingOrder = businessLogic.getOrder("Orders_" + formattedDateInput, orderNumber);
+        Order existingOrder = businessLogic.getOrder(orderDate, orderNumber);
 
         if (existingOrder == null) {
             System.out.println("Order not found!");
@@ -210,7 +168,7 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         System.out.println("Save the edited order? (Y/N)");
         String saveChoice = scanner.nextLine();
         if (saveChoice.equalsIgnoreCase("Y")) {
-            if (businessLogic.editOrder("Orders_" + formattedDateInput, orderNumber, editedOrder)) {
+            if (businessLogic.editOrder(orderDate, orderNumber, editedOrder)) {
                 System.out.println("Order edited successfully.");
             } else {
                 System.out.println("Failed to edit the order.");
@@ -219,15 +177,16 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
     }
 
     private void removeOrder() {
-    	System.out.println("Enter order date (MM/dd/yyyy): ");
+        System.out.println("Enter order date (MM/dd/yyyy): ");
         String dateInput = scanner.nextLine();
-        String formattedDateInput = dateInput.replace("/", "");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+        LocalDate orderDate = LocalDate.parse(dateInput, formatter);
 
         System.out.println("Enter order number: ");
         int orderNumber = scanner.nextInt();
         scanner.nextLine();
 
-        Order existingOrder = businessLogic.getOrder("Orders_" + formattedDateInput, orderNumber);
+        Order existingOrder = businessLogic.getOrder(orderDate, orderNumber);
 
         if (existingOrder == null) {
             System.out.println("Order not found!");
@@ -240,7 +199,7 @@ public class FloorUserInterfaceImpl implements FloorUserInterface {
         System.out.println("Are you sure you want to remove this order? (Y/N)");
         String removeChoice = scanner.nextLine();
         if (removeChoice.equalsIgnoreCase("Y")) {
-            if (businessLogic.removeOrder("Orders_" + formattedDateInput, orderNumber)) {
+            if (businessLogic.removeOrder(orderDate, orderNumber)) {
                 System.out.println("Order removed successfully.");
             } else {
                 System.out.println("Failed to remove the order.");

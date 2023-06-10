@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
-import java.io.File;
 
 import com.floor.dto.Order;
 import com.floor.dto.Product;
@@ -16,11 +14,8 @@ import com.floor.persistence.FloorDataAccess;
 import com.floor.persistence.FloorDataAccessImpl;
 
 public class FloorBusinessLogicImpl implements FloorBusinessLogic {
-    private static final String ORDER_FOLDER_PATH = "Orders/";
-    private static final String FILE_EXT = ".txt";
-    
     private LinkedList<Order> ordersList = new LinkedList<>();
-    private FloorDataAccessImpl dataAccess = new FloorDataAccessImpl();
+    private FloorDataAccess dataAccess;
 
     public FloorBusinessLogicImpl() {
         this.dataAccess = new FloorDataAccessImpl();
@@ -29,7 +24,7 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
     @Override
     public boolean addOrder(Order order) {
         // Generate order number based on the next available order #
-        int nextOrderNumber = generateUniqueOrderNumber();
+    	int nextOrderNumber = generateUniqueOrderNumber();
         order.setOrderNumber(nextOrderNumber);
 
         // Perform calculations
@@ -38,7 +33,6 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
         // Add order to the list
         return ordersList.add(order);
     }
-    
 
     @Override
     public int generateUniqueOrderNumber() {
@@ -48,18 +42,14 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
                 .orElse(0);
         return maxOrderNumber + 1;
     }
-
+    
+    
+    
+    
+    
     @Override
-    public boolean editOrder(String filename, int orderNumber, Order editedOrder) {
-        List<Order> ordersList = readOrderFile(filename); 
-
-        Order existingOrder = null;
-        for (Order order : ordersList) {
-            if (order.getOrderNumber() == orderNumber) {
-                existingOrder = order;
-                break;
-            }
-        }
+    public boolean editOrder(LocalDate orderDate, int orderNumber, Order editedOrder) {
+        Order existingOrder = getOrder(orderDate, orderNumber);
 
         if (existingOrder == null) {
             return false;
@@ -86,59 +76,41 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
         Iterator<Order> iterator = ordersList.iterator();
         while (iterator.hasNext()) {
             Order order = iterator.next();
-            if (order.getOrderNumber() == orderNumber) {
+            if (order.getDate().equals(orderDate) && order.getOrderNumber() == orderNumber) {
                 iterator.remove();
                 break;
             }
         }
-        ordersList.add(editedOrder);
-
-        // Write updated orders back to the file
-        return dataAccess.writeOrderFile(filename, ordersList); // This method should return a boolean indicating success or failure
+        return ordersList.add(editedOrder);
     }
 
     @Override
-    public boolean removeOrder(String filename, int orderNumber) {
-    	 List<Order> ordersList = readOrderFile(filename); // Adjust this line based on how you read the file
-
-    	    // Find the order to remove
-    	    Order orderToRemove = null;
-    	    for (Order order : ordersList) {
-    	        if (order.getOrderNumber() == orderNumber) {
-    	            orderToRemove = order;
-    	            break;
-    	        }
-    	    }
-
-    	    // If order is not found, return false
-    	    if (orderToRemove == null) {
-    	        return false;
-    	    }
-    	    // If order is found, remove it from the list
-    	    ordersList.remove(orderToRemove);
-
-    	    // Write updated orders back to the file
-    	    return dataAccess.writeOrderFile(filename, ordersList); // This method should return a boolean indicating success or failure
-    	}
-    	    
-
-    @Override
-    public LinkedList<Order> readOrderFile(String filename) {
-        return dataAccess.readOrderFile(filename);
+    public boolean removeOrder(LocalDate orderDate, int orderNumber) {
+        Iterator<Order> iterator = ordersList.iterator();
+        while (iterator.hasNext()) {
+            Order order = iterator.next();
+            if (order.getDate().equals(orderDate) && order.getOrderNumber() == orderNumber) {
+                iterator.remove();
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public Order getOrder(String filename, int orderNumber) {
-        List<Order> ordersList = readOrderFile(filename); // Adjust this line based on how you read the file
-        
+    public List<String> getAllOrderFiles() {
+        return dataAccess.getAllOrderFiles();
+    }
+
+    @Override
+    public Order getOrder(LocalDate orderDate, int orderNumber) {
         for (Order order : ordersList) {
-            if (order.getOrderNumber() == orderNumber) {
+            if (order.getDate().equals(orderDate) && order.getOrderNumber() == orderNumber) {
                 return order;
             }
         }
         return null;
     }
-
 
     @Override
     public void calculateOrder(Order order) {
@@ -167,10 +139,7 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
              order.setMaterialCost(BigDecimal.ZERO);
              order.setLabourCost(BigDecimal.ZERO);
         }
-
-       
-
-        // Calculate tax
+     // Calculate tax
         String state = order.getState();
         Tax tax = getTaxByState(taxes, state);
         if (tax != null) {
@@ -186,6 +155,7 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
         BigDecimal total = order.getMaterialCost().add(order.getLabourCost()).add(order.getTax());
         order.setTotal(total);
     }
+
 
     @Override
     public LinkedList<Product> getAllProducts() {
@@ -216,11 +186,14 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
 
     @Override
     public void exportAllData() {
-//        LinkedList<Order> orders = getAllOrders();
-//        dataAccess.writeOrderFiles(orders);
+        
+        dataAccess.readOrderFiles(getAllOrderFiles());
     }
 
-   
+//    private int getNextOrderNumber() {
+//        int maxOrderNumber = ordersList.stream().mapToInt(Order::getOrderNumber).max().orElse(0);
+//        return maxOrderNumber + 1;
+//    }
 
     private Product getProductByType(LinkedList<Product> products, String productType) {
         for (Product product : products) {
@@ -260,34 +233,16 @@ public class FloorBusinessLogicImpl implements FloorBusinessLogic {
         return ordersByDate;
     }
 
-   @Override
-	public List<String> getAllOrderFiles() {
-	   final String ORDER_FOLDER_PATH = "Orders/";
-	   List<String> orderFiles = new ArrayList<>();
-
-	   File directory = new File(ORDER_FOLDER_PATH);
-	    File[] files = directory.listFiles();
-
-	    if (files != null) {
-	        for (File file : files) {
-	            if (file.isFile()) {
-	                orderFiles.add(file.getName());
-	            }
-	        }
-	    }
-	    return orderFiles;
+	@Override
+	public void saveQuantity() {
+		
+        dataAccess.writeOrderFiles(ordersList);
 	}
-
-   @Override
-
-   public void saveQuantity() {
-
-	   dataAccess.writeOrderFile("Orders_" , ordersList);
-
-   }
-
-
-   
-   
-   
+	
+	
+	@Override
+    public LinkedList<Order> readOrderFile(List<String> filename) {
+        return dataAccess.readOrderFiles(filename);
+    }
 }
+
